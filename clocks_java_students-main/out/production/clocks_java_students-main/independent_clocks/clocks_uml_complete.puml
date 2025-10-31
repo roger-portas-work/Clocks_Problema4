@@ -1,0 +1,109 @@
+@startuml
+skinparam classAttributeIconSize 0
+'============================================================================'
+' Complete PlantUML diagram with new Widget base class
+'============================================================================'
+
+'--- Observer pattern scaffold (same API names you usas en código) -----------
+interface Observer {
+  + update(arg0: java.util.Observable, arg1: Object): void
+}
+
+abstract class Observable {
+  - observers: java.util.List<Observer>
+  # changed: boolean
+  + Observable()
+  + addObserver(ob: Observer): void
+  + deleteObserver(ob: Observer): void
+  + deleteObservers(): void
+  + countObservers(): int
+  # setChanged(): void
+  # clearChanged(): void
+  + hasChanged(): boolean
+  + notifyObservers(): void
+  + notifyObservers(arg1: Object): void
+}
+
+'--- Nuevo nivel base para todos los “widgets” que observan el ClockTimer ----
+abstract class Widget {
+  - panel: javax.swing.JPanel
+  - repaintPeriod: int
+  + update(o: java.util.Observable, arg: Object): void
+  + show(): void
+}
+
+Widget ..|> Observer
+
+'--- ClockTimer sigue siendo el Observable del patrón ------------------------
+class ClockTimer {
+  - timer: java.util.Timer
+  - period: int
+  + ClockTimer(period: int)
+  + getPeriod(): int
+  + stop(): void
+}
+
+Observable <|-- ClockTimer
+
+'--- Clock ahora hereda de Widget (no implementa Observer directamente) ------
+abstract class Clock {
+  - worldPlace: String
+  - hoursOffsetTimeZone: int
+  - lastTimeRepaint: java.time.LocalDateTime
+  + isTimeToRepaint(now: java.time.LocalDateTime): boolean
+}
+
+Widget <|-- Clock
+
+'--- Relojes concretos que muestran hora -------------------------------------
+class AnalogClock {
+  + AnalogClock(hoursOffsetTimeZone: int, worldPlace: String, repaintEveryMs: int)
+  + update(o: java.util.Observable, arg: Object): void
+}
+
+class DigitalClock {
+  - formatter: java.time.format.DateTimeFormatter
+  - clockLabel: javax.swing.JLabel
+  - placeLabel: javax.swing.JLabel
+  + DigitalClock(hoursOffsetTimeZone: int, worldPlace: String, repaintEveryMs: int)
+  + update(o: java.util.Observable, arg: Object): void
+}
+
+Clock <|-- AnalogClock
+Clock <|-- DigitalClock
+
+'--- Widgets que NO son “relojes de hora” (heredan directamente de Widget) ---
+class CountdownTimer {
+  - remaining: java.time.Duration
+  - label: javax.swing.JLabel
+  + CountdownTimer(duration: java.time.Duration, name: String, repaintEveryMs: int)
+  + update(o: java.util.Observable, arg: Object): void
+}
+
+class Stopwatch {
+  - elapsedMs: long
+  - running: boolean
+  - label: javax.swing.JLabel
+  - startStopButton: javax.swing.JButton
+  - clockTimer: ClockTimer
+  + Stopwatch(clockTimer: ClockTimer, name: String, repaintEveryMs: int)
+  + update(o: java.util.Observable, arg: Object): void
+}
+
+Widget <|-- CountdownTimer
+Widget <|-- Stopwatch
+
+'--- Main para instanciar/registrar ------------------------------------------
+class Main
+
+'----------------------------- Relaciones ------------------------------------
+' Observer pattern cardinalities
+Observable "1" o--> "*" Observer : observers
+
+' ClockTimer notifica a todos los Widgets (incluye Clock y sus subclases)
+ClockTimer --> "0..*" Widget : notifies
+
+
+
+
+@enduml
